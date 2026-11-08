@@ -166,7 +166,7 @@ function App() {
       <section className="game-layout">
         <div className="play-card">
           <div className="level-row"><span className="level-pill">LEVEL {level + 1}</span><span className="letter-name">Letter {letter}</span><span className="stars">{done ? '⭐' : '☆'} {done ? 'Completed' : 'Keep going!'}</span></div>
-          <div className="drawing-area">
+          <div className={`drawing-area ${showWin ? "letter-shattered" : ""}`}>
             <div className="big-letter">{letter}</div>
             <svg viewBox="0 0 220 120" role="img" aria-label={`Join the dots to draw letter ${letter}`} className="dot-board" onPointerDown={startTracing} onPointerMove={moveTracing} onPointerUp={stopTracing} onPointerCancel={stopTracing}>
               {joined.length > 1 && <polyline points={path} fill="none" stroke="#5b70e8" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />}
@@ -174,7 +174,7 @@ function App() {
                 <circle cx={x} cy={y} r="10" /><text x={x} y={y + 3.5}>{index + 1}</text>
               </g>)}
             </svg>
-            {showWin && <div className="celebration" aria-live="polite"><span>🎉</span><strong>SUPER JOB!</strong><span>🫧 🌈 🫧</span><small>You made {letter}!</small></div>}
+            {showWin && <div className="celebration" aria-live="polite"><div className="glass-shatter" aria-hidden="true">{Array.from({ length: 12 }, (_, index) => <i key={index} className={`glass-piece piece-${index + 1}`} />)}</div><span className="celebrate-content">🎉</span><strong className="celebrate-content">SUPER JOB!</strong><span className="celebrate-content">🫧 🌈 🫧</span><small className="celebrate-content">You made {letter}!</small></div>}
           </div>
           <p className="instruction">{showWin ? 'You are an alphabet superstar!' : hint ? 'Oops! Find dot number ' + (joined.length + 1) + ' next. You can do it!' : `Put your finger on dot 1 and drag through the dots in order.`}</p>
           <div className="action-row">
