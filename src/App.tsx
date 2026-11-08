@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import './App.css'
 
 const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
@@ -104,7 +104,7 @@ function App() {
     }
   }
 
-  function visitDotAtPointer(event: React.PointerEvent<SVGSVGElement>) {
+  function visitDotAtPointer(event: ReactPointerEvent<SVGSVGElement>) {
     const svg = event.currentTarget
     const matrix = svg.getScreenCTM()
     if (!matrix) return
@@ -121,7 +121,7 @@ function App() {
     if (nearest >= 0) chooseDot(nearest)
   }
 
-  function startTracing(event: React.PointerEvent<SVGSVGElement>) {
+  function startTracing(event: ReactPointerEvent<SVGSVGElement>) {
     if (showWin) return
     event.preventDefault()
     event.currentTarget.setPointerCapture(event.pointerId)
@@ -129,7 +129,7 @@ function App() {
     visitDotAtPointer(event)
   }
 
-  function moveTracing(event: React.PointerEvent<SVGSVGElement>) {
+  function moveTracing(event: ReactPointerEvent<SVGSVGElement>) {
     if (!tracing.current) return
     event.preventDefault()
     visitDotAtPointer(event)
