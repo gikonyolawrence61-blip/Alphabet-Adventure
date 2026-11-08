@@ -90,6 +90,17 @@ function App() {
     return () => window.clearTimeout(timer)
   }, [orderWriting])
 
+  useEffect(() => {
+    if (orderChosen.length !== Math.min(5, 26 - orderStart) || orderWriting || orderWon || orderFailed) return
+    setOrderWon(true)
+    if (soundOn) playTune(true)
+    if ('speechSynthesis' in window) {
+      const speech = new SpeechSynthesisUtterance('Amazing! You put the letters in order!')
+      window.speechSynthesis.cancel()
+      window.speechSynthesis.speak(speech)
+    }
+  }, [orderChosen, orderStart, orderWriting, orderWon, orderFailed, soundOn])
+
   const letter = letters[level]
   const dots = points[letter]
   const unlockedThrough = Math.min(25, completed.length)
@@ -110,17 +121,7 @@ function App() {
       return
     }
     setOrderWriting(chosen)
-    if (orderChosen.length === Math.min(5, 26 - orderStart) - 1) {
-      window.setTimeout(() => {
-        setOrderWon(true)
-        if (soundOn) playTune(true)
-        if ('speechSynthesis' in window) {
-          const speech = new SpeechSynthesisUtterance('Amazing! You put the letters in order!')
-          window.speechSynthesis.cancel()
-          window.speechSynthesis.speak(speech)
-        }
-      }, 1500)
-    }
+
   }
 
   function resetOrderRound(nextStart = orderStart) {
