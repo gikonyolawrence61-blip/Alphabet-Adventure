@@ -221,15 +221,14 @@ function App() {
       {activityMode === 'order' ? (
         <section className="order-game play-card">
           <div className="level-row"><span className="level-pill">LETTER CHALLENGE</span><span className="letter-name">Put them in order</span><span className="stars">⭐ {orderChosen.length} / {Math.min(5, 26 - orderStart)}</span></div>
-          <p className="order-instruction">Tap the mixed-up letters in ABC order. Watch the hand write each one!</p>
+          <p className="order-instruction">Tap the mixed-up letters in ABC order. Watch each letter write itself!</p>
           <div className="order-slots" aria-label="Letters in alphabetical order">
             {Array.from({length: Math.min(5, 26 - orderStart)}, (_, i) => {
               const current = orderChosen[i]
               const isWriting = orderWriting === letters[orderStart + i]
               return <div className={`order-slot ${current ? 'slot-filled' : ''} ${isWriting ? 'slot-writing' : ''}`} key={i}>
                 {current || (isWriting ? orderWriting : '＿')}
-                {isWriting && <span className="writing-hand" aria-label="Writing hand">✍️</span>}
-                {isWriting && <svg className="writing-demo" viewBox="0 0 220 120" aria-hidden="true"><polyline className="writing-stroke" points={points[orderWriting].map(([x,y]) => `${x},${y}`).join(' ')} /><text x="178" y="105" className="moving-hand">✍️<animateMotion dur="1.35s" fill="freeze" path={`M ${points[orderWriting].map(([x,y]) => `${x} ${y}`).join(' L ')}`} /></text></svg>}
+                {isWriting && <svg className="writing-demo" viewBox="0 0 220 120" aria-label={`Letter ${orderWriting} drawing itself`}><polyline className="writing-stroke" points={points[orderWriting].map(([x,y]) => `${x},${y}`).join(' ')} /></svg>}
               </div>
             })}
           </div>
