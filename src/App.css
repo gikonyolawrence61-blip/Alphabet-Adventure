@@ -26,3 +26,30 @@ button{font:inherit;cursor:pointer;border:0}.app-shell{max-width:1100px;margin:0
 .piece-12{--x:45px;--y:-30px;--r:135deg;clip-path:polygon(0 20%,100% 0,75% 100%)}
 @keyframes glass-fly{0%{opacity:0;transform:translate(0,0) rotate(0) scale(.35)}15%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(var(--r)) scale(.8)}}
 .celebrate-content{position:relative;z-index:1}
+
+
+/* Mixed-letter ordering activity */
+.mode-switch{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 0}
+.mode-switch button{padding:11px 16px;border-radius:13px;background:#fff;color:#69739f;font-weight:900;font-size:13px;box-shadow:0 5px 16px #5363a511}
+.mode-switch button.mode-active{background:#6878e9;color:#fff;box-shadow:0 6px 15px #6878e944}
+.order-game{margin-top:16px}
+.order-instruction{text-align:center;color:#737da5;font-weight:800;margin:18px 0}
+.order-slots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:22px auto;max-width:650px}
+.order-slot{height:100px;position:relative;display:grid;place-items:center;border:2px dashed #c7ccef;border-radius:18px;background:#f7f8ff;color:#b0b6d3;font-size:42px;font-weight:1000;overflow:hidden}
+.order-slot.slot-filled{background:#e9f8ef;border:2px solid #8ed5a6;color:#29965a;animation:slot-pop .35s ease}
+.order-slot.slot-writing{background:#fff7df;border:2px solid #f4bd5b;color:#6a70df}
+.writing-hand{position:absolute;right:5px;bottom:1px;font-size:24px;animation:hand-bob .4s ease-in-out infinite alternate}
+.writing-demo{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.writing-stroke{fill:none;stroke:#5c70e8;stroke-width:7;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:900;stroke-dashoffset:900;animation:draw-letter 1.35s ease forwards}
+.moving-hand{font-size:20px}
+.mixed-letters{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:26px auto}
+.mixed-letter{width:64px;height:68px;border-radius:17px;background:#f0eaff;color:#7555c8;font-size:30px;font-weight:1000;box-shadow:0 5px 0 #d8cafa;transition:transform .15s,opacity .15s}
+.mixed-letter:not(:disabled):active{transform:translateY(4px);box-shadow:0 1px 0 #d8cafa}
+.mixed-letter:disabled{opacity:.32;cursor:default}
+.mixed-letter.letter-used{background:#e8f8ee;color:#29965a}
+.order-feedback{text-align:center;font-weight:900;color:#a46c1b;background:#fff4d9;border-radius:14px;padding:13px;margin:12px auto;max-width:540px}
+.order-feedback.order-success{background:#e9f9ef;color:#258b50;font-size:17px}
+@keyframes draw-letter{to{stroke-dashoffset:0}}
+@keyframes hand-bob{to{transform:translateY(-5px) rotate(-12deg)}}
+@keyframes slot-pop{50%{transform:scale(1.1)}}
+@media(max-width:520px){.order-slots{gap:5px}.order-slot{height:76px;font-size:30px;border-radius:12px}.mixed-letter{width:53px;height:58px;font-size:25px}.mode-switch button{flex:1;font-size:11px;padding:10px 8px}}
