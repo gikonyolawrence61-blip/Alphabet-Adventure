@@ -57,17 +57,17 @@ function playTune(win = false) {
 function App() {
   const [level, setLevel] = useState(0)
   const [joined, setJoined] = useState<number[]>([])
-  const [completed, setCompleted] = useState<number[]>([])
+  const [completed, setCompleted] = useState<number[]>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('alphabet-adventure-progress') || '[]')
+      return Array.isArray(saved) ? saved.filter((n) => Number.isInteger(n) && n >= 0 && n < 26) : []
+    } catch {
+      return []
+    }
+  })
   const [showWin, setShowWin] = useState(false)
   const [soundOn, setSoundOn] = useState(true)
   const [hint, setHint] = useState(false)
-
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('alphabet-adventure-progress') || '[]')
-      if (Array.isArray(saved)) setCompleted(saved.filter((n) => Number.isInteger(n) && n >= 0 && n < 26))
-    } catch { /* start fresh if storage is unavailable */ }
-  }, [])
 
   useEffect(() => {
     try { localStorage.setItem('alphabet-adventure-progress', JSON.stringify(completed)) } catch { /* storage optional */ }
