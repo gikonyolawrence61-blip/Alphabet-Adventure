@@ -68,17 +68,69 @@ function App() {
   const [showWin, setShowWin] = useState(false)
   const [soundOn, setSoundOn] = useState(true)
   const [hint, setHint] = useState(false)
+  const [activityMode, setActivityMode] = useState<'trace' | 'order'>('trace')
+  const [orderStart, setOrderStart] = useState(0)
+  const [orderChosen, setOrderChosen] = useState<string[]>([])
+  const [orderOptions, setOrderOptions] = useState<string[]>(() => shuffleLetters(0))
+  const [orderWriting, setOrderWriting] = useState('')
+  const [orderFailed, setOrderFailed] = useState(false)
+  const [orderWon, setOrderWon] = useState(false)
   const tracing = useRef(false)
 
   useEffect(() => {
     try { localStorage.setItem('alphabet-adventure-progress', JSON.stringify(completed)) } catch { /* storage optional */ }
   }, [completed])
 
+  useEffect(() => {
+    if (!orderWriting) return
+    const timer = window.setTimeout(() => {
+      setOrderChosen((old) => old.includes(orderWriting) ? old : [...old, orderWriting])
+      setOrderWriting('')
+    }, 1450)
+    return () => window.clearTimeout(timer)
+  }, [orderWriting])
+
   const letter = letters[level]
   const dots = points[letter]
   const unlockedThrough = Math.min(25, completed.length)
   const done = completed.includes(level)
   const path = useMemo(() => joined.map((index) => dots[index]).filter(Boolean).map(([x, y]) => `${x},${y}`).join(' '), [joined, dots])
+
+  function shuffleLetters(start: number) {
+    const group = letters.slice(start, Math.min(start + 5, 26))
+    return [...group].sort(() => Math.random() - 0.5)
+  }
+
+  function chooseOrderLetter(chosen: string) {
+    if (orderFailed || orderWon || orderWriting || orderChosen.includes(chosen)) return
+    const expected = letters[orderStart + orderChosen.length]
+    if (chosen !== expected) {
+      setOrderFailed(true)
+      if (soundOn) playTune(false)
+      return
+    }
+    setOrderWriting(chosen)
+    if (orderChosen.length === Math.min(5, 26 - orderStart) - 1) {
+      window.setTimeout(() => {
+        setOrderWon(true)
+        if (soundOn) playTune(true)
+        if ('speechSynthesis' in window) {
+          const speech = new SpeechSynthesisUtterance('Amazing! You put the letters in order!')
+          window.speechSynthesis.cancel()
+          window.speechSynthesis.speak(speech)
+        }
+      }, 1500)
+    }
+  }
+
+  function resetOrderRound(nextStart = orderStart) {
+    setOrderStart(nextStart)
+    setOrderChosen([])
+    setOrderWriting('')
+    setOrderFailed(false)
+    setOrderWon(false)
+    setOrderOptions(shuffleLetters(nextStart))
+  }
 
   function chooseDot(index: number) {
     if (showWin || joined.includes(index)) return
@@ -163,6 +215,29 @@ function App() {
         <div className="progress-wrap"><strong>{completed.length} / 26</strong><span>letters mastered</span><div className="progress"><i style={{ width: `${completed.length / 26 * 100}%` }} /></div></div>
       </section>
 
+      <div className="mode-switch"><button className={activityMode === 'trace' ? 'mode-active' : ''} onClick={() => setActivityMode('trace')}>✍️ Join the dots</button><button className={activityMode === 'order' ? 'mode-active' : ''} onClick={() => setActivityMode('order')}>🔤 Letter order challenge</button></div>
+
+      {activityMode === 'order' ? (
+        <section className="order-game play-card">
+          <div className="level-row"><span className="level-pill">LETTER CHALLENGE</span><span className="letter-name">Put them in order</span><span className="stars">⭐ {orderChosen.length} / {Math.min(5, 26 - orderStart)}</span></div>
+          <p className="order-instruction">Tap the mixed-up letters in ABC order. Watch the hand write each one!</p>
+          <div className="order-slots" aria-label="Letters in alphabetical order">
+            {Array.from({length: Math.min(5, 26 - orderStart)}, (_, i) => {
+              const current = orderChosen[i]
+              const isWriting = orderWriting === letters[orderStart + i]
+              return <div className={`order-slot ${current ? 'slot-filled' : ''} ${isWriting ? 'slot-writing' : ''}`} key={i}>
+                {current || (isWriting ? orderWriting : '＿')}
+                {isWriting && <span className="writing-hand" aria-label="Writing hand">✍️</span>}
+                {isWriting && <svg className="writing-demo" viewBox="0 0 220 120" aria-hidden="true"><polyline className="writing-stroke" points={points[orderWriting].map(([x,y]) => `${x},${y}`).join(' ')} /><text x="178" y="105" className="moving-hand">✍️<animateMotion dur="1.35s" fill="freeze" path={`M ${points[orderWriting].map(([x,y]) => `${x} ${y}`).join(' L ')}`} /></text></svg>}
+              </div>
+            })}
+          </div>
+          <div className="mixed-letters">{orderOptions.map((item) => <button key={item} disabled={orderChosen.includes(item) || orderWriting === item || orderFailed || orderWon} className={`mixed-letter ${orderChosen.includes(item) ? 'letter-used' : ''}`} onClick={() => chooseOrderLetter(item)}>{item}</button>)}</div>
+          {orderFailed && <div className="order-feedback">😊 Not quite! Let's try that round again.</div>}
+          {orderWon && <div className="order-feedback order-success">🎉 Fantastic! 🫧 ⭐ You put the letters in the right order!</div>}
+          <div className="action-row"><button className="secondary-button" onClick={() => resetOrderRound()}>↻ Try again</button>{(orderWon || orderFailed) && <button className="primary-button" onClick={() => resetOrderRound(orderWon ? Math.min(25, orderStart + 5) : orderStart)}>{orderWon && orderStart < 21 ? 'Next five letters →' : 'Play again ↻'}</button>}</div>
+        </section>
+      ) : (
       <section className="game-layout">
         <div className="play-card">
           <div className="level-row"><span className="level-pill">LEVEL {level + 1}</span><span className="letter-name">Letter {letter}</span><span className="stars">{done ? '⭐' : '☆'} {done ? 'Completed' : 'Keep going!'}</span></div>
@@ -194,6 +269,7 @@ function App() {
           <div className="legend"><span>🟣 Current</span><span>⭐ Completed</span><span>🔒 Locked</span></div>
         </aside>
       </section>
+      )}
       <footer>Made for curious little learners 💛 <span>Learn • Play • Celebrate</span></footer>
     </main>
   )
