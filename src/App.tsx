@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 
 const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
@@ -68,6 +68,7 @@ function App() {
   const [showWin, setShowWin] = useState(false)
   const [soundOn, setSoundOn] = useState(true)
   const [hint, setHint] = useState(false)
+  const tracing = useRef(false)
 
   useEffect(() => {
     try { localStorage.setItem('alphabet-adventure-progress', JSON.stringify(completed)) } catch { /* storage optional */ }
@@ -103,6 +104,38 @@ function App() {
     }
   }
 
+  function visitDotAtPointer(event: React.PointerEvent<SVGSVGElement>) {
+    const svg = event.currentTarget
+    const matrix = svg.getScreenCTM()
+    if (!matrix) return
+    const point = svg.createSVGPoint()
+    point.x = event.clientX
+    point.y = event.clientY
+    const position = point.matrixTransform(matrix.inverse())
+    let nearest = -1
+    let nearestDistance = 16
+    dots.forEach(([x, y], index) => {
+      const distance = Math.hypot(position.x - x, position.y - y)
+      if (distance < nearestDistance) { nearest = index; nearestDistance = distance }
+    })
+    if (nearest >= 0) chooseDot(nearest)
+  }
+
+  function startTracing(event: React.PointerEvent<SVGSVGElement>) {
+    if (showWin) return
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+    tracing.current = true
+    visitDotAtPointer(event)
+  }
+
+  function moveTracing(event: React.PointerEvent<SVGSVGElement>) {
+    if (!tracing.current) return
+    event.preventDefault()
+    visitDotAtPointer(event)
+  }
+
+  function stopTracing() { tracing.current = false }
   function nextLevel() {
     const next = Math.min(25, level + 1)
     setLevel(next)
@@ -135,15 +168,15 @@ function App() {
           <div className="level-row"><span className="level-pill">LEVEL {level + 1}</span><span className="letter-name">Letter {letter}</span><span className="stars">{done ? '⭐' : '☆'} {done ? 'Completed' : 'Keep going!'}</span></div>
           <div className="drawing-area">
             <div className="big-letter">{letter}</div>
-            <svg viewBox="0 0 220 120" role="img" aria-label={`Join the dots to draw letter ${letter}`} className="dot-board">
+            <svg viewBox="0 0 220 120" role="img" aria-label={`Join the dots to draw letter ${letter}`} className="dot-board" onPointerDown={startTracing} onPointerMove={moveTracing} onPointerUp={stopTracing} onPointerCancel={stopTracing}>
               {joined.length > 1 && <polyline points={path} fill="none" stroke="#5b70e8" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />}
-              {dots.map(([x, y], index) => <g key={index} onClick={() => chooseDot(index)} className={`dot ${joined.includes(index) ? 'joined' : ''} ${index === joined.length ? 'next-dot' : ''}`} role="button" tabIndex={0} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') chooseDot(index) }}>
+              {dots.map(([x, y], index) => <g key={index} className={`dot ${joined.includes(index) ? 'joined' : ''} ${index === joined.length ? 'next-dot' : ''}`}>
                 <circle cx={x} cy={y} r="10" /><text x={x} y={y + 3.5}>{index + 1}</text>
               </g>)}
             </svg>
             {showWin && <div className="celebration" aria-live="polite"><span>🎉</span><strong>SUPER JOB!</strong><span>🫧 🌈 🫧</span><small>You made {letter}!</small></div>}
           </div>
-          <p className="instruction">{showWin ? 'You are an alphabet superstar!' : hint ? 'Oops! Find dot number ' + (joined.length + 1) + ' next. You can do it!' : `Tap dot ${joined.length + 1} to continue.`}</p>
+          <p className="instruction">{showWin ? 'You are an alphabet superstar!' : hint ? 'Oops! Find dot number ' + (joined.length + 1) + ' next. You can do it!' : `Put your finger on dot 1 and drag through the dots in order.`}</p>
           <div className="action-row">
             <button className="secondary-button" onClick={restart}>↻ Try again</button>
             <button className="hint-button" onClick={() => setHint(true)}>💡 Hint</button>
